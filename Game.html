@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <h1>Memory Card Game</h1>
+    <div class="game-board" id="gameBoard"></div>
+    <div class="controls">
+        <button class="restart-btn" id="restartBtn">Restart Game</button>
+        <button class="next-level-btn" id="nextLevelBtn">Next Level</button>
+    </div>
+    <audio id="matchSound" src="match.mp3"></audio>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            const gameBoard = document.getElementById("gameBoard");
+            const matchSound = document.getElementById("matchSound");
+            const restartBtn = document.getElementById("restartBtn");
+            const nextLevelBtn = document.getElementById("nextLevelBtn");
+            let levelIndex = 0;
+            const levels = [
+                { rows: 4, cols: 4 },
+                { rows: 6, cols: 4 },
+                { rows: 6, cols: 6 }
+            ];
+            let cards, flippedCards, matchedCards, totalPairs;
+            
+            function initializeGame(levelIdx) {
+                gameBoard.innerHTML = "";
+                nextLevelBtn.style.display = "none";
+                levelIndex = levelIdx;
+                const { rows, cols } = levels[levelIdx];
+                gameBoard.style.gridTemplateColumns = `repeat(${cols}, 100px)`;
+                flippedCards = [];
+                matchedCards = [];
+                totalPairs = (rows * cols) / 2;
+                
+                const symbols = ['🍎', '🍌', '🍒', '🍇', '🍉', '🍓', '🥝', '🍍', '🥑', '🍊', '🍋', '🥕', '🌽', '🍔', '🍕', '🍩', '🍪', '🍫'];
+                let selectedSymbols = symbols.slice(0, totalPairs);
+                cards = [...selectedSymbols, ...selectedSymbols];
+                cards.sort(() => Math.random() - 0.5);
+                
+                cards.forEach(symbol => {
+                    const card = document.createElement("div");
+                    card.classList.add("card");
+                    card.dataset.symbol = symbol;
+                    card.addEventListener("click", () => flipCard(card));
+                    gameBoard.appendChild(card);
+                });
+            }
+            
+            function flipCard(card) {
+                if (flippedCards.length < 2 && !card.classList.contains("flipped")) {
+                    card.textContent = card.dataset.symbol;
+                    card.classList.add("flipped");
+                    flippedCards.push(card);
+                    
+                    if (flippedCards.length === 2) {
+                        setTimeout(checkMatch, 1000);
+                    }
+                }
+            }
+            
+            function checkMatch() {
+                const [card1, card2] = flippedCards;
+                if (card1.dataset.symbol === card2.dataset.symbol) {
+                    card1.classList.add("matched");
+                    card2.classList.add("matched");
+                    matchedCards.push(card1, card2);
+                    playMatchEffect();
+                } else {
+                    card1.textContent = "";
+                    card2.textContent = "";
+                    card1.classList.remove("flipped");
+                    card2.classList.remove("flipped");
+                }
+                flippedCards = [];
+                if (matchedCards.length === cards.length) {
+                    if (levelIndex < levels.length - 1) {
+                        nextLevelBtn.style.display = "inline-block";
+                    } else {
+                        setTimeout(() => alert("Congratulations! You completed all levels!"), 500);
+                    }
+                }
+            }
+            
+            function playMatchEffect() {
+                matchSound.play();
+                setTimeout(() => {
+                    matchedCards.forEach(card => card.classList.remove("flipped"));
+                }, 500);
+            }
+            
+            restartBtn.addEventListener("click", () => initializeGame(0));
+            nextLevelBtn.addEventListener("click", () => initializeGame(levelIndex + 1));
+            
+            initializeGame(0);
+        });
+
+        
+    </script>
+</body>
+</html>
